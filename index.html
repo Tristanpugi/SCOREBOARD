@@ -111,6 +111,27 @@
       gap: 0;
     }
 
+    .quick-score-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin: 0 8px;
+    }
+    .quick-score-btns button {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: all .15s;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .quick-score-btns button:hover { border-color: var(--yellow); color: var(--yellow); }
+    body.tv-screen .quick-score-btns,
+    body.broadcast-mode .quick-score-btns { display: none !important; }
+
     .score-num {
       font-size: 5rem;
       font-weight: 900;
@@ -171,6 +192,13 @@
     }
     .timer-btn:hover { border-color: var(--yellow); color: var(--yellow); }
     .timer-btn.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+    #btn-play {
+      width: 64px;
+      height: 42px;
+      font-size: 1.3rem;
+      border-radius: 8px;
+      border-color: #555;
+    }
 
     .extra-time-input {
       background: var(--card-bg);
@@ -589,6 +617,84 @@
       padding: 10px 16px;
     }
 
+    /* ── ROSTER ── */
+    .roster-section {
+      margin-top: 10px;
+      border-top: 1px solid var(--border);
+      padding-top: 8px;
+    }
+    .roster-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      width: 100%;
+    }
+    .roster-toggle:hover { color: var(--text); }
+    .roster-list {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .roster-list.open { display: flex; }
+    .roster-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .roster-item span {
+      flex: 1;
+      font-size: 0.82rem;
+      color: var(--text);
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 6px;
+    }
+    .roster-item span:hover { background: #2a2a2a; color: var(--yellow); }
+    .roster-item button {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 2px 4px;
+    }
+    .roster-item button:hover { color: var(--red); }
+    .roster-add {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+    }
+    .roster-add input {
+      flex: 1;
+      background: #111;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+    }
+    .roster-add input:focus { outline: none; border-color: var(--yellow); }
+    .roster-add button {
+      background: var(--border);
+      border: none;
+      color: var(--text);
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .roster-add button:hover { background: var(--yellow); color: #000; }
+
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
       .score-num  { font-size: 3.5rem; min-width: 55px; }
@@ -601,6 +707,8 @@
       #home-controls, #match-controls, #away-controls { grid-column: 1; }
     }
   </style>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -609,11 +717,18 @@
   <h1>⚽ Teine Liiga B · Lõuna-ida</h1>
   <div class="topbar-btns">
     <span class="mode-indicator" id="mode-indicator">Operator</span>
+    <span id="sync-indicator" title="Firebase sünkimine aktiivne" style="font-size:0.7rem;color:#2dc653;display:none;letter-spacing:1px">● SYNC</span>
     <button onclick="openTvScreen()" id="open-tv-btn" title="Ava eraldi tablooaken teleka jaoks">Ava TV</button>
     <button onclick="toggleBroadcastMode()" id="broadcast-btn" title="Tabloo reziim (B)">Tabloo</button>
     <button onclick="toggleFullscreen()">⛶ Täisekraan</button>
     <button onclick="resetGame()" style="border-color:#555;color:#e63946">↺ Reset</button>
   </div>
+</div>
+
+<!-- FIREBASE SETUP BANNER -->
+<div id="firebase-banner" style="display:none;background:#1a1200;border-bottom:1px solid #8a6a00;padding:8px 20px;font-size:0.78rem;color:#f5c518;text-align:center">
+  📵 Firebase ei ole seadistatud – sünkimine töötab ainult samas brauseris. Lisa Firebase config <strong>index.html</strong> faili algusesse (juhend koodis).
+  <button onclick="this.parentElement.style.display='none'" style="margin-left:12px;background:none;border:1px solid #8a6a00;color:#f5c518;padding:2px 8px;border-radius:4px;cursor:pointer">✕</button>
 </div>
 
 <!-- TEAM PICKER MODAL -->
@@ -644,9 +759,17 @@
     <div class="score-center">
       <div id="period-badge" class="period-badge">1. poolaeg</div>
       <div class="score-display">
+        <div class="quick-score-btns" id="qs-home">
+          <button onclick="adjustScoreByTeam('home', -1)" title="Võta värav maha">−</button>
+          <button onclick="addTeamEvent('home','goal')" title="Lisa värav">⚽</button>
+        </div>
         <span class="score-num" id="score-home">0</span>
         <span class="score-sep">–</span>
         <span class="score-num" id="score-away">0</span>
+        <div class="quick-score-btns" id="qs-away">
+          <button onclick="addTeamEvent('away','goal')" title="Lisa värav">⚽</button>
+          <button onclick="adjustScoreByTeam('away', -1)" title="Võta värav maha">−</button>
+        </div>
       </div>
       <div class="time-row">
         <div>
@@ -694,7 +817,8 @@
       <span class="team-control-name" id="home-control-name">KODU</span>
     </h3>
     <div class="ctrl-row" style="margin-bottom:8px">
-      <input type="text" id="home-player" placeholder="Mängija nimi" />
+      <input type="text" id="home-player" placeholder="Mängija nimi" list="home-players-list" autocomplete="off" />
+      <datalist id="home-players-list"></datalist>
       <input type="number" id="home-min" placeholder="Min" min="1" max="120" style="width:70px;flex:0 0 70px" />
     </div>
     <div class="ctrl-row">
@@ -702,6 +826,14 @@
       <button class="btn btn-yellow" onclick="addTeamEvent('home', 'card-yellow')">🟨</button>
       <button class="btn btn-red" onclick="addTeamEvent('home', 'card-red')">🟥</button>
       <button class="btn btn-muted" onclick="adjustScoreByTeam('home', -1)">– 1</button>
+    </div>
+    <div class="roster-section">
+      <button class="roster-toggle" onclick="toggleRoster('home')"><span id="home-roster-arrow">▶</span> Koosseis (<span id="home-roster-count">0</span>)</button>
+      <div class="roster-list" id="home-roster-list"></div>
+      <div class="roster-add">
+        <input type="text" id="home-roster-input" placeholder="Lisa mängija..." onkeydown="if(event.key==='Enter')addPlayer('home')" />
+        <button onclick="addPlayer('home')">+</button>
+      </div>
     </div>
   </div>
 
@@ -745,7 +877,8 @@
       <span class="team-control-name" id="away-control-name">KÜLALIS</span>
     </h3>
     <div class="ctrl-row" style="margin-bottom:8px">
-      <input type="text" id="away-player" placeholder="Mängija nimi" />
+      <input type="text" id="away-player" placeholder="Mängija nimi" list="away-players-list" autocomplete="off" />
+      <datalist id="away-players-list"></datalist>
       <input type="number" id="away-min" placeholder="Min" min="1" max="120" style="width:70px;flex:0 0 70px" />
     </div>
     <div class="ctrl-row">
@@ -754,12 +887,20 @@
       <button class="btn btn-red" onclick="addTeamEvent('away', 'card-red')">🟥</button>
       <button class="btn btn-muted" onclick="adjustScoreByTeam('away', -1)">– 1</button>
     </div>
+    <div class="roster-section">
+      <button class="roster-toggle" onclick="toggleRoster('away')"><span id="away-roster-arrow">▶</span> Koosseis (<span id="away-roster-count">0</span>)</button>
+      <div class="roster-list" id="away-roster-list"></div>
+      <div class="roster-add">
+        <input type="text" id="away-roster-input" placeholder="Lisa mängija..." onkeydown="if(event.key==='Enter')addPlayer('away')" />
+        <button onclick="addPlayer('away')">+</button>
+      </div>
+    </div>
   </div>
 
 </div>
 
-<div id="tv-fullscreen-hint" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:1500;align-items:center;justify-content:center;">
-  <button class="btn btn-yellow" onclick="requestTvFullscreen()" style="font-size:1.1rem;padding:14px 24px;">Pane TV taisekraanile</button>
+<div id="tv-fullscreen-hint" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:1500;">
+  <button class="btn btn-yellow" onclick="requestTvFullscreen()" style="font-size:1rem;padding:10px 28px;box-shadow:0 4px 18px rgba(0,0,0,.7);">⛶ Täisekraan</button>
 </div>
 
 <!-- GOAL OVERLAY -->
@@ -769,6 +910,35 @@
 </div>
 
 <script>
+  // ══ FIREBASE SYNC SEADED ════════════════════════════════════
+  // Täida alla oma Firebase projekti andmed.
+  // Juhend (tasuta, ~5 min):
+  //  1. Mine https://console.firebase.google.com/
+  //  2. "Add project" → anna nimi → continue (analytics pole kohustuslik)
+  //  3. Vasakul: Build → Realtime Database → Create database
+  //     → vali asukoht → Start in TEST MODE → Enable
+  //  4. Hammasratas (Project Settings) → General → Your apps
+  //     → </> (Web) → Register app → kopeeri config alla
+  // ════════════════════════════════════════════════════════════
+  const FIREBASE_CONFIG = {
+    apiKey:            "AIzaSyBKcWx7CY-u_SEQ62v2PMzjC_Z4_C73_DY",
+    authDomain:        "scoreboard-730e2.firebaseapp.com",
+    databaseURL:       "https://scoreboard-730e2-default-rtdb.firebaseio.com",
+    projectId:         "scoreboard-730e2",
+    storageBucket:     "scoreboard-730e2.firebasestorage.app",
+    messagingSenderId: "184098123233",
+    appId:             "1:184098123233:web:2d2835d05ecac6ccf6b6a0",
+  };
+  // ════════════════════════════════════════════════════════════
+  const FIREBASE_ON = !!(FIREBASE_CONFIG.databaseURL && FIREBASE_CONFIG.apiKey);
+  let fbDb = null;
+  if (FIREBASE_ON) {
+    try {
+      if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+      fbDb = firebase.database();
+    } catch(e) { console.warn('Firebase init:', e); }
+  }
+
   // ══════════════════════════════════════════
   //  II LIIGA B LÕUNA-IDA MEESKONNAD 2025
   // ══════════════════════════════════════════
@@ -989,6 +1159,7 @@
   let timerMin = 0, timerSec = 0, timerRunning = false, timerInterval = null;
   let events = [];
   let eventId = 0;
+  let homePlayers = [], awayPlayers = [];
   let broadcastMode = false;
   let tvWindow = null;
   const SCOREBOARD_STATE_KEY = 'scoreboard_state_v1';
@@ -1077,8 +1248,6 @@
     const secCtrl = document.getElementById('clock-sec-control');
     if (minCtrl) minCtrl.value = String(timerMin);
     if (secCtrl) secCtrl.value = String(timerSec).padStart(2, '0');
-
-    if (!isTvScreen) persistState();
   }
 
   function currentMaxMin() {
@@ -1283,8 +1452,11 @@
       awayScore,
       timerMin,
       timerSec,
+      timerRunning,
       events,
       eventId,
+      homePlayers,
+      awayPlayers,
       period: document.getElementById('period-select').value,
       extraTime: parseInt(document.getElementById('extra-time').value, 10) || 0,
       homeName: document.getElementById('home-name').value,
@@ -1299,10 +1471,31 @@
 
     homeScore = Number(state.homeScore) || 0;
     awayScore = Number(state.awayScore) || 0;
-    timerMin = Number(state.timerMin) || 0;
-    timerSec = Number(state.timerSec) || 0;
     events = Array.isArray(state.events) ? state.events : [];
     eventId = Number(state.eventId) || events.length;
+
+    // Timer: TV runs its own local interval; operator keeps its own timer
+    if (isTvScreen) {
+      const shouldRun = !!state.timerRunning;
+      timerMin = Number(state.timerMin) || 0;
+      timerSec = Number(state.timerSec) || 0;
+      if (shouldRun && !timerInterval) {
+        timerRunning = true;
+        timerInterval = setInterval(() => {
+          timerSec++;
+          if (timerSec >= 60) { timerSec = 0; timerMin++; }
+          updateTimeDisplay();
+        }, 1000);
+      } else if (!shouldRun && timerInterval) {
+        timerRunning = false;
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    } else if (!timerRunning) {
+      // Operator: only sync timer from remote when not running locally
+      timerMin = Number(state.timerMin) || 0;
+      timerSec = Number(state.timerSec) || 0;
+    }
 
     document.getElementById('score-home').textContent = String(homeScore);
     document.getElementById('score-away').textContent = String(awayScore);
@@ -1327,6 +1520,9 @@
       document.getElementById('period-badge').textContent = state.period;
     }
 
+    if (Array.isArray(state.homePlayers)) { homePlayers = state.homePlayers; renderRoster('home'); }
+    if (Array.isArray(state.awayPlayers)) { awayPlayers = state.awayPlayers; renderRoster('away'); }
+
     updateTimeDisplay();
     renderEvents();
     renderCards();
@@ -1334,9 +1530,59 @@
     fitTvTeamNames();
   }
 
+  // ── ROSTER ──
+  function addPlayer(side) {
+    const input = document.getElementById(side + '-roster-input');
+    const name = input.value.trim();
+    if (!name) return;
+    if (side === 'home') { if (!homePlayers.includes(name)) homePlayers.push(name); }
+    else { if (!awayPlayers.includes(name)) awayPlayers.push(name); }
+    input.value = '';
+    renderRoster(side);
+    persistState();
+  }
+
+  function removePlayer(side, idx) {
+    if (side === 'home') homePlayers.splice(idx, 1);
+    else awayPlayers.splice(idx, 1);
+    renderRoster(side);
+    persistState();
+  }
+
+  function renderRoster(side) {
+    const players = side === 'home' ? homePlayers : awayPlayers;
+    const list = document.getElementById(side + '-roster-list');
+    const count = document.getElementById(side + '-roster-count');
+    const datalist = document.getElementById(side + '-players-list');
+    if (count) count.textContent = players.length;
+    if (datalist) datalist.innerHTML = players.map(p => `<option value="${escHtml(p)}"></option>`).join('');
+    if (!list) return;
+    list.innerHTML = players.map((p, i) => `
+      <div class="roster-item">
+        <span onclick="document.getElementById('${side}-player').value='${escHtml(p)}'" title="Vali mängija">${escHtml(p)}</span>
+        <button onclick="removePlayer('${side}',${i})" title="Eemalda">✕</button>
+      </div>
+    `).join('');
+  }
+
+  function toggleRoster(side) {
+    const list = document.getElementById(side + '-roster-list');
+    const arrow = document.getElementById(side + '-roster-arrow');
+    const open = list.classList.toggle('open');
+    if (arrow) arrow.textContent = open ? '▼' : '▶';
+  }
+
+  let isApplyingRemote = false;
+  // Unique ID per browser tab — used to ignore own Firebase echoes
+  const DEVICE_ID = Math.random().toString(36).slice(2);
+
   function persistState() {
     if (isTvScreen) return;
-    localStorage.setItem(SCOREBOARD_STATE_KEY, JSON.stringify(serializeState()));
+    if (isApplyingRemote) return;
+    const s = serializeState();
+    s._src = DEVICE_ID;
+    localStorage.setItem(SCOREBOARD_STATE_KEY, JSON.stringify(s));
+    if (fbDb) fbDb.ref('scoreboard').set(s).catch(() => {});
   }
 
   function restoreStateFromStorage() {
@@ -1428,6 +1674,11 @@
     if (params.get('screen') === 'tv') {
       setTvScreenMode(true);
       restoreStateFromStorage();
+      if (fbDb) {
+        fbDb.ref('scoreboard').on('value', snap => {
+          if (snap.val()) applyState(snap.val());
+        });
+      }
       if (params.get('autofs') === '1' && !document.fullscreenElement) {
         requestTvFullscreen();
       }
@@ -1437,14 +1688,23 @@
 
     restoreStateFromStorage();
 
+    if (fbDb) {
+      fbDb.ref('scoreboard').on('value', snap => {
+        if (!snap.val()) return;
+        if (snap.val()._src === DEVICE_ID) return; // ignore own echo
+        isApplyingRemote = true;
+        applyState(snap.val());
+        isApplyingRemote = false;
+      });
+    }
+
     if (params.get('tabloo') === '1') {
       setBroadcastMode(true);
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(() => {});
       }
     }
-
-    persistState();
+    // Don't write to Firebase on load — only listen
   })();
 
   window.addEventListener('storage', (e) => {
@@ -1463,6 +1723,17 @@
   window.addEventListener('resize', () => {
     fitTvTeamNames();
   });
+
+  // ── FIREBASE ÜHENDUSE INDIKAATOR ──
+  if (fbDb) {
+    fbDb.ref('.info/connected').on('value', snap => {
+      const el = document.getElementById('sync-indicator');
+      if (el) el.style.display = snap.val() ? 'inline' : 'none';
+    });
+  } else if (!isTvScreen) {
+    const banner = document.getElementById('firebase-banner');
+    if (banner) banner.style.display = 'block';
+  }
 </script>
 </body>
 </html>
