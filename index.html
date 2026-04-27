@@ -1186,6 +1186,26 @@
       if (btn) { btn.textContent = '⏸'; btn.classList.add('active'); }
       if (btnCtrl) { btnCtrl.textContent = '⏸ Stopp'; btnCtrl.classList.add('active'); }
       timerInterval = setInterval(() => {
+        const extra = parseInt(document.getElementById('extra-time').value) || 0;
+        const maxMin = currentMaxMin();
+        const period = document.getElementById('period-select').value;
+        const inRegularPeriod = period === '1. poolaeg' || period === '2. poolaeg';
+        // Stop at period end if no extra time
+        if (inRegularPeriod && extra === 0 && timerMin >= maxMin) {
+          timerSec = 0;
+          timerMin = maxMin;
+          updateTimeDisplay();
+          // Auto-stop the timer
+          timerRunning = false;
+          clearInterval(timerInterval);
+          timerInterval = null;
+          const btn = document.getElementById('btn-play');
+          const btnCtrl = document.getElementById('btn-play-ctrl');
+          if (btn) { btn.textContent = '▶'; btn.classList.remove('active'); }
+          if (btnCtrl) { btnCtrl.textContent = '▶ Start'; btnCtrl.classList.remove('active'); }
+          persistState();
+          return;
+        }
         timerSec++;
         if (timerSec >= 60) { timerSec = 0; timerMin++; }
         updateTimeDisplay();
@@ -1493,6 +1513,19 @@
       if (shouldRun && !timerInterval) {
         timerRunning = true;
         timerInterval = setInterval(() => {
+          const extra = parseInt(document.getElementById('extra-time').value) || 0;
+          const maxMin = currentMaxMin();
+          const period = document.getElementById('period-select').value;
+          const inRegularPeriod = period === '1. poolaeg' || period === '2. poolaeg';
+          if (inRegularPeriod && extra === 0 && timerMin >= maxMin) {
+            timerSec = 0;
+            timerMin = maxMin;
+            updateTimeDisplay();
+            timerRunning = false;
+            clearInterval(timerInterval);
+            timerInterval = null;
+            return;
+          }
           timerSec++;
           if (timerSec >= 60) { timerSec = 0; timerMin++; }
           updateTimeDisplay();
