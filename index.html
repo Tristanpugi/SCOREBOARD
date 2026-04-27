@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teine Liiga B Lõuna-ida · Tulemuslaud</title>
+  <style>
+    :root {
+      --yellow: #f5c518;
+      --dark: #0d0d0d;
+      --card-bg: #1a1a1a;
+      --border: #2e2e2e;
+      --text: #ffffff;
+      --muted: #888;
+      --red: #e63946;
+      --green: #2dc653;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── TOP BAR ── */
+    .topbar {
+      width: 100%;
+      background: #111;
+      border-bottom: 2px solid var(--yellow);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .topbar h1 { font-size: 1rem; color: var(--yellow); letter-spacing: 2px; text-transform: uppercase; }
+    .topbar-btns { display: flex; gap: 8px; }
+    .topbar button {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all .2s;
+    }
+    .topbar button:hover { border-color: var(--yellow); color: var(--yellow); }
+
+    .mode-indicator {
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── SCOREBOARD ── */
+    .scoreboard {
+      margin-top: 40px;
+      width: min(900px, 96vw);
+    }
+
+    .teams-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .team {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .team-name-input {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid var(--border);
+      color: var(--text);
+      font-size: 1.6rem;
+      font-weight: 700;
+      text-align: center;
+      width: 100%;
+      padding: 4px 8px;
+      transition: border-color .2s;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .team-name-input:focus { outline: none; border-bottom-color: var(--yellow); }
+
+    .team-subtitle { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* score */
+    .score-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .score-num {
+      font-size: 5rem;
+      font-weight: 900;
+      color: var(--yellow);
+      line-height: 1;
+      min-width: 80px;
+      text-align: center;
+      transition: transform .15s;
+    }
+    .score-sep { font-size: 4rem; font-weight: 300; color: var(--muted); padding: 0 4px; }
+
+    .score-num.bump {
+      animation: bump .4s ease;
+    }
+
+    @keyframes bump {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.5); color: #fff; }
+      100% { transform: scale(1); }
+    }
+
+    /* time */
+    .time-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: center;
+    }
+    .time-display {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--yellow);
+      min-width: 80px;
+      text-align: center;
+    }
+    .extra-time-live {
+      min-height: 18px;
+      font-size: 0.9rem;
+      color: #ffd740;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity .2s;
+    }
+    .extra-time-live.show { opacity: 1; }
+    .timer-btns { display: flex; gap: 6px; }
+    .timer-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 32px; height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .timer-btn:hover { border-color: var(--yellow); color: var(--yellow); }
+    .timer-btn.active { background: var(--yellow); color: #000; border-color: var(--yellow); }
+
+    .extra-time-input {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 42px; height: 32px;
+      text-align: center;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .extra-time-input:focus { outline: none; border-color: var(--yellow); }
+
+    /* ── PERIOD ── */
+    .period-badge {
+      background: var(--yellow);
+      color: #000;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 3px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+    }
+
+    /* ── CARDS SUMMARY ── */
+    .cards-row {
+      display: none;
+      justify-content: space-between;
+      margin-top: 16px;
+      padding: 0 8px;
+    }
+    .cards-side { display: flex; gap: 4px; flex-wrap: wrap; max-width: 45%; min-height: 24px; }
+    .card-icon {
+      width: 14px; height: 20px;
+      border-radius: 3px;
+      display: inline-block;
+    }
+    .card-icon.yellow { background: #f5c518; }
+    .card-icon.red    { background: var(--red); }
+
+    /* ── EVENTS LOG ── */
+    .events-section {
+      margin-top: 28px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .events-col {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px 0;
+    }
+    .event-item {
+      background: linear-gradient(90deg, rgba(245,197,24,.08), rgba(245,197,24,.01));
+      border: 1px solid rgba(245,197,24,.14);
+      border-left: 3px solid rgba(245,197,24,.7);
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      animation: slideIn .3s ease;
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .event-min  { color: var(--yellow); font-weight: 700; min-width: 36px; }
+    .event-icon { font-size: 1rem; }
+    .event-name { flex: 1; }
+    .event-team { font-size: 0.7rem; color: var(--muted); }
+    .event-del  { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 0.9rem; opacity: 0; transition: opacity .2s; }
+    .event-item:hover .event-del { opacity: 1; }
+
+    /* ── CONTROLS ── */
+    .controls {
+      margin-top: 32px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      width: min(900px, 96vw);
+      padding-bottom: 40px;
+    }
+
+    #home-controls { grid-column: 1; }
+    #match-controls { grid-column: 2; }
+    #away-controls { grid-column: 3; }
+
+    .ctrl-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .ctrl-card h3 { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 12px; }
+
+    .team-control-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .team-control-name {
+      color: var(--text);
+      font-size: 0.85rem;
+      text-transform: none;
+      letter-spacing: 0;
+      font-weight: 700;
+    }
+
+    .ctrl-row { display: flex; gap: 8px; }
+    .ctrl-row input, .ctrl-row select {
+      flex: 1;
+      background: #111;
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+    }
+    .ctrl-row input:focus, .ctrl-row select:focus { outline: none; border-color: var(--yellow); }
+    .ctrl-row input[type=number] { width: 70px; flex: 0 0 70px; }
+
+    .ctrl-help {
+      margin-top: 8px;
+      font-size: 0.72rem;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .ctrl-section-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin: 14px 0 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+    .ctrl-section-label:first-of-type { margin-top: 0; }
+
+    .clock-adjust-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+    .clock-adjust-btns .btn {
+      padding: 8px 0;
+      font-size: 0.82rem;
+      text-align: center;
+    }
+
+    .btn {
+      padding: 9px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.85rem;
+      transition: all .2s;
+      white-space: nowrap;
+    }
+    .btn-yellow { background: var(--yellow); color: #000; }
+    .btn-yellow:hover { background: #ffd740; }
+    .btn-red    { background: var(--red); color: #fff; }
+    .btn-red:hover { background: #ff5a5f; }
+    .btn-green  { background: var(--green); color: #000; }
+    .btn-green:hover { background: #39e87a; }
+    .btn-muted  { background: var(--border); color: var(--muted); }
+    .btn-muted:hover { background: #3a3a3a; color: #fff; }
+
+    .score-ctrl { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+    .score-ctrl select { flex: 1; }
+    .score-ctrl-btns { display: flex; gap: 6px; }
+
+    /* ── GOAL OVERLAY ── */
+    #goal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .3s;
+    }
+    #goal-overlay.show { opacity: 1; pointer-events: all; }
+    .goal-text {
+      font-size: 6rem;
+      font-weight: 900;
+      color: var(--yellow);
+      text-shadow: 0 0 40px #f5c518aa;
+      animation: goalPop .6s ease;
+    }
+    .goal-sub { font-size: 1.4rem; color: #fff; margin-top: 10px; }
+    @keyframes goalPop {
+      0%   { transform: scale(0.3) rotate(-5deg); opacity: 0; }
+      60%  { transform: scale(1.2) rotate(2deg); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg); }
+    }
+
+    /* ── TEAM LOGO ── */
+    .team-logo {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900;
+      font-size: 1rem;
+      letter-spacing: 0;
+      cursor: pointer;
+      border: 3px solid var(--border);
+      transition: border-color .2s, transform .2s;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .team-logo:hover { border-color: var(--yellow); transform: scale(1.07); }
+    .team-logo svg { width: 100%; height: 100%; }
+
+    /* ── TEAM PICKER MODAL ── */
+    .modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.75);
+      z-index: 500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      width: min(480px, 94vw);
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    .modal h2 { font-size: 1rem; color: var(--yellow); margin-bottom: 16px; letter-spacing: 1px; text-transform: uppercase; }
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .team-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #111;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: all .2s;
+    }
+    .team-option:hover { border-color: var(--yellow); background: #1f1f1f; }
+    .team-option .opt-logo {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+    .team-option .opt-logo svg { width: 100%; height: 100%; }
+    .team-option .opt-name { font-size: 0.82rem; font-weight: 600; }
+    .modal-close {
+      float: right;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.2rem;
+      cursor: pointer;
+      margin-top: -4px;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── LEAGUE BADGE ── */
+    .league-badge {
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ── FULLSCREEN helpers ── */
+    :fullscreen body, :-webkit-full-screen body { background: var(--dark); }
+
+    /* ── BROADCAST / TABLOO MODE ── */
+    body.broadcast-mode {
+      justify-content: center;
+      overflow: hidden;
+    }
+    body.broadcast-mode .topbar,
+    body.broadcast-mode .controls,
+    body.broadcast-mode .cards-row,
+    body.broadcast-mode .league-badge,
+    body.broadcast-mode .timer-btns,
+    body.broadcast-mode #extra-time,
+    body.broadcast-mode #team-modal {
+      display: none !important;
+    }
+    body.broadcast-mode .scoreboard {
+      margin-top: 1vh;
+      width: 100vw;
+      max-width: 1800px;
+      min-height: auto;
+    }
+    body.broadcast-mode .teams-row {
+      width: 100%;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 2vw;
+    }
+    body.broadcast-mode .score-center {
+      gap: 28px;
+    }
+    body.broadcast-mode .score-num {
+      font-size: clamp(8rem, 19vw, 18rem);
+      min-width: clamp(140px, 16vw, 280px);
+    }
+    body.broadcast-mode .score-sep {
+      font-size: clamp(5rem, 12vw, 12rem);
+      padding: 0 1vw;
+    }
+    body.broadcast-mode .time-display {
+      font-size: clamp(3rem, 6vw, 6rem);
+      min-width: 260px;
+    }
+
+    /* ── DUAL-SCREEN TV MODE ── */
+    body.tv-screen {
+      justify-content: center;
+      overflow: hidden;
+    }
+    body.tv-screen .topbar,
+    body.tv-screen .controls,
+    body.tv-screen .cards-row,
+    body.tv-screen .team-subtitle,
+    body.tv-screen .league-badge,
+    body.tv-screen .timer-btns,
+    body.tv-screen .time-row > span,
+    body.tv-screen #extra-time,
+    body.tv-screen #team-modal {
+      display: none !important;
+    }
+    body.tv-screen .scoreboard {
+      margin-top: 1vh;
+      width: min(1900px, 98vw);
+      min-height: auto;
+    }
+    body.tv-screen .teams-row {
+      width: 100%;
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+      gap: 2vw;
+    }
+    body.tv-screen .team {
+      gap: 18px;
+      min-width: 0;
+    }
+    body.tv-screen .team-logo {
+      width: clamp(96px, 8vw, 168px);
+      height: clamp(96px, 8vw, 168px);
+      border-color: #4a4a4a;
+      pointer-events: none;
+    }
+    body.tv-screen .team-name-input {
+      display: none !important;
+      border: none;
+      pointer-events: none;
+      width: min(42vw, 760px);
+      max-width: 100%;
+      font-size: clamp(1rem, 2.4vw, 3rem);
+      letter-spacing: 1px;
+      padding: 0;
+      white-space: nowrap;
+      overflow: visible;
+      text-overflow: clip;
+    }
+    body.tv-screen .score-center {
+      gap: 2vh;
+    }
+    body.tv-screen .period-badge {
+      font-size: clamp(1rem, 1.2vw, 1.4rem);
+      padding: 8px 20px;
+    }
+    body.tv-screen .score-num {
+      font-size: clamp(10rem, 21vw, 19rem);
+      min-width: clamp(170px, 16vw, 310px);
+    }
+    body.tv-screen .score-sep {
+      font-size: clamp(6rem, 11vw, 10rem);
+      padding: 0 1vw;
+    }
+    body.tv-screen .time-display {
+      font-size: clamp(3.5rem, 7vw, 7rem);
+      min-width: 320px;
+    }
+    body.tv-screen .extra-time-live {
+      font-size: clamp(1.2rem, 2vw, 2rem);
+      min-height: 34px;
+    }
+    body.tv-screen #tv-fullscreen-hint {
+      display: flex;
+    }
+    body.tv-screen .events-section,
+    body.broadcast-mode .events-section {
+      margin-top: 20px;
+      gap: 18px;
+    }
+    body.tv-screen .event-item,
+    body.broadcast-mode .event-item {
+      font-size: clamp(1rem, 1.1vw, 1.4rem);
+      padding: 10px 16px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 600px) {
+      .score-num  { font-size: 3.5rem; min-width: 55px; }
+      .score-sep  { font-size: 3rem; }
+      .team-name-input { font-size: 1.1rem; }
+      .events-section { grid-template-columns: 1fr; }
+      .goal-text  { font-size: 4rem; }
+      .team-grid  { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+      #home-controls, #match-controls, #away-controls { grid-column: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <h1>⚽ Teine Liiga B · Lõuna-ida</h1>
+  <div class="topbar-btns">
+    <span class="mode-indicator" id="mode-indicator">Operator</span>
+    <button onclick="openTvScreen()" id="open-tv-btn" title="Ava eraldi tablooaken teleka jaoks">Ava TV</button>
+    <button onclick="toggleBroadcastMode()" id="broadcast-btn" title="Tabloo reziim (B)">Tabloo</button>
+    <button onclick="toggleFullscreen()">⛶ Täisekraan</button>
+    <button onclick="resetGame()" style="border-color:#555;color:#e63946">↺ Reset</button>
+  </div>
+</div>
+
+<!-- TEAM PICKER MODAL -->
+<div class="modal-backdrop" id="team-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <h2 id="modal-title">Vali meeskond</h2>
+    <div class="team-grid" id="team-grid"></div>
+  </div>
+</div>
+
+<!-- SCOREBOARD -->
+<div class="scoreboard">
+
+  <div style="text-align:center;margin-bottom:8px">
+    <span class="league-badge">Teine Liiga B · Lõuna-ida grupp 2026</span>
+  </div>
+
+  <div class="teams-row">
+    <!-- HOME -->
+    <div class="team">
+      <span class="team-subtitle">Kodumeeskond</span>
+      <div class="team-logo" id="logo-home" onclick="openModal('home')" title="Klõpsa meeskonna valimiseks"></div>
+      <input class="team-name-input" id="home-name" value="KODU" maxlength="22" />
+    </div>
+
+    <!-- SCORE CENTER -->
+    <div class="score-center">
+      <div id="period-badge" class="period-badge">1. poolaeg</div>
+      <div class="score-display">
+        <span class="score-num" id="score-home">0</span>
+        <span class="score-sep">–</span>
+        <span class="score-num" id="score-away">0</span>
+      </div>
+      <div class="time-row">
+        <div>
+          <div class="time-display" id="time-display">00:00</div>
+          <div class="extra-time-live" id="extra-time-live"></div>
+        </div>
+        <div class="timer-btns">
+          <button class="timer-btn" id="btn-play" title="Käivita või peata mängukell" onclick="toggleTimer()">▶</button>
+          <button class="timer-btn" title="Võta kellalt 1 minut maha" onclick="removeMinute()">-1</button>
+          <button class="timer-btn" title="Lisa kellale 1 minut" onclick="addMinute()">+1</button>
+        </div>
+        <span style="font-size:.75rem;color:var(--muted)">+</span>
+        <input class="extra-time-input" id="extra-time" type="number" min="0" max="20" value="0" title="Lisaaeg minutites" />
+      </div>
+    </div>
+
+    <!-- AWAY -->
+    <div class="team">
+      <span class="team-subtitle">Külalismeeskond</span>
+      <div class="team-logo" id="logo-away" onclick="openModal('away')" title="Klõpsa meeskonna valimiseks"></div>
+      <input class="team-name-input" id="away-name" value="KÜLALIS" maxlength="22" style="text-align:center" />
+    </div>
+  </div>
+
+  <!-- CARDS ROW -->
+  <div class="cards-row">
+    <div class="cards-side" id="cards-home"></div>
+    <div class="cards-side" id="cards-away" style="justify-content:flex-end"></div>
+  </div>
+
+  <!-- EVENTS -->
+  <div class="events-section">
+    <div class="events-col" id="events-home"></div>
+    <div class="events-col" id="events-away"></div>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+
+  <!-- HOME TEAM SETTINGS -->
+  <div class="ctrl-card" id="home-controls">
+    <h3 class="team-control-title">
+      <span>🏠 Kodumeeskond</span>
+      <span class="team-control-name" id="home-control-name">KODU</span>
+    </h3>
+    <div class="ctrl-row" style="margin-bottom:8px">
+      <input type="text" id="home-player" placeholder="Mängija nimi" />
+      <input type="number" id="home-min" placeholder="Min" min="1" max="120" style="width:70px;flex:0 0 70px" />
+    </div>
+    <div class="ctrl-row">
+      <button class="btn btn-green" onclick="addTeamEvent('home', 'goal')">+ Värav</button>
+      <button class="btn btn-yellow" onclick="addTeamEvent('home', 'card-yellow')">🟨</button>
+      <button class="btn btn-red" onclick="addTeamEvent('home', 'card-red')">🟥</button>
+      <button class="btn btn-muted" onclick="adjustScoreByTeam('home', -1)">– 1</button>
+    </div>
+  </div>
+
+  <!-- MATCH SETTINGS -->
+  <div class="ctrl-card" id="match-controls">
+    <h3>⚙️ Mängu seaded</h3>
+
+    <div class="ctrl-section-label">Poolaeg</div>
+    <select id="period-select" onchange="setPeriod(this.value)" style="width:100%;background:#111;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:8px;font-size:.85rem">
+      <option value="1. poolaeg">1. poolaeg</option>
+      <option value="2. poolaeg">2. poolaeg</option>
+      <option value="Lisaaeg">Lisaaeg</option>
+      <option value="Penaltid">Penaltid</option>
+      <option value="Lõpp">Lõpp</option>
+    </select>
+
+    <div class="ctrl-section-label">Lisa aeg minutites</div>
+    <div class="ctrl-row">
+      <input type="number" id="extra-time-control" min="0" max="20" value="0" placeholder="min" title="Sisesta lisaaeg minutites" />
+      <button class="btn btn-yellow" onclick="syncExtraTimeInputs('ctrl')" title="Rakenda sisestatud lisaaeg mängukellale" style="flex:1">✓ Rakenda</button>
+    </div>
+
+    <div class="ctrl-section-label">Kella haldus</div>
+    <div class="ctrl-row" style="margin-bottom:8px">
+      <input type="number" id="clock-min-control" min="0" max="300" value="0" placeholder="MM" title="Minutid" />
+      <span style="color:var(--muted);font-size:1.2rem;display:flex;align-items:center">:</span>
+      <input type="number" id="clock-sec-control" min="0" max="59" value="0" placeholder="SS" title="Sekundid" />
+      <button class="btn btn-green" onclick="setManualTimeFromControls()" title="Sea kell sisestatud ajale" style="flex:1">Sea aeg</button>
+    </div>
+    <div class="clock-adjust-btns">
+      <button class="btn btn-muted" onclick="removeMinute()" title="Võta 1 minut maha">− 1 min</button>
+      <button class="btn btn-muted" id="btn-play-ctrl" onclick="toggleTimer()" title="Käivita või peata kell">▶ Start</button>
+      <button class="btn btn-muted" onclick="addMinute()" title="Lisa 1 minut">+ 1 min</button>
+    </div>
+  </div>
+
+  <!-- AWAY TEAM SETTINGS -->
+  <div class="ctrl-card" id="away-controls">
+    <h3 class="team-control-title">
+      <span>🚌 Külalismeeskond</span>
+      <span class="team-control-name" id="away-control-name">KÜLALIS</span>
+    </h3>
+    <div class="ctrl-row" style="margin-bottom:8px">
+      <input type="text" id="away-player" placeholder="Mängija nimi" />
+      <input type="number" id="away-min" placeholder="Min" min="1" max="120" style="width:70px;flex:0 0 70px" />
+    </div>
+    <div class="ctrl-row">
+      <button class="btn btn-green" onclick="addTeamEvent('away', 'goal')">+ Värav</button>
+      <button class="btn btn-yellow" onclick="addTeamEvent('away', 'card-yellow')">🟨</button>
+      <button class="btn btn-red" onclick="addTeamEvent('away', 'card-red')">🟥</button>
+      <button class="btn btn-muted" onclick="adjustScoreByTeam('away', -1)">– 1</button>
+    </div>
+  </div>
+
+</div>
+
+<div id="tv-fullscreen-hint" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:1500;align-items:center;justify-content:center;">
+  <button class="btn btn-yellow" onclick="requestTvFullscreen()" style="font-size:1.1rem;padding:14px 24px;">Pane TV taisekraanile</button>
+</div>
+
+<!-- GOAL OVERLAY -->
+<div id="goal-overlay">
+  <div class="goal-text">VÄRAV!</div>
+  <div class="goal-sub" id="goal-overlay-sub"></div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════
+  //  II LIIGA B LÕUNA-IDA MEESKONNAD 2025
+  // ══════════════════════════════════════════
+  // Logod genereeritud SVG-na meeskonna värvides
+  const LOGO_VERSION = '20260427';
+
+  // Real logo helper
+  function imgLogo(file) {
+    return `<img src="logos/${file}?v=${LOGO_VERSION}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:50%;background:#fff;padding:4px;">`;
+  }
+
+  function raeLogo() {
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="49" fill="#1c1d1f"/>
+      <circle cx="50" cy="50" r="43" fill="#f4e500"/>
+      <path d="M50 7 A43 43 0 0 1 88 73 L66 58 A24 24 0 0 0 50 7 Z" fill="#1c1d1f"/>
+      <text x="24" y="82" font-family="Arial Black, Arial, sans-serif" font-size="84" font-weight="900" fill="#1c1d1f">R</text>
+      <path id="raeArc" d="M56 14 A33 33 0 0 1 84 68" fill="none"/>
+      <text font-family="Arial,sans-serif" font-size="8.8" font-weight="800" fill="#1c1d1f" letter-spacing="0.8">
+        <textPath href="#raeArc" startOffset="50%" text-anchor="middle">RAE SPORDIKOOL</textPath>
+      </text>
+    </svg>`;
+  }
+
+  function noovaLogo() {
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="noovaBg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#5ec3ff"/>
+          <stop offset="100%" stop-color="#1f6fb5"/>
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="47" fill="url(#noovaBg)"/>
+      <polygon points="50,6 60,36 92,36 66,54 76,86 50,67 24,86 34,54 8,36 40,36" fill="none" stroke="#ffffff" stroke-width="4"/>
+      <circle cx="44" cy="50" r="11" fill="#ffffff"/>
+      <circle cx="44" cy="50" r="9" fill="#1d1d1d"/>
+      <text x="58" y="54" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="#ffffff">NOOVA</text>
+    </svg>`;
+  }
+
+  function koseLogo() {
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 4 L92 20 L88 73 L50 96 L12 73 L8 20 Z" fill="#ffffff"/>
+      <path d="M50 9 L86 23 L83 70 L50 91 L17 70 L14 23 Z" fill="#111111"/>
+      <path d="M50 9 L50 91 L17 70 L14 23 Z" fill="#ef7a20"/>
+      <path d="M50 14 L76 24 L74 66 L50 82 L26 66 L24 24 Z" fill="#e8e8e8"/>
+      <rect x="8" y="39" width="84" height="19" fill="#e8e8e8" stroke="#111111" stroke-width="1.8"/>
+      <text x="50" y="52.5" font-family="Arial,sans-serif" font-size="12" font-weight="900" fill="#111111" text-anchor="middle">FC KOSE</text>
+      <text x="50" y="33" font-family="Arial,sans-serif" font-size="6" font-weight="700" fill="#111111" text-anchor="middle">est.1998</text>
+      <path d="M36 74 C42 67, 58 67, 64 74 C58 78, 42 78, 36 74 Z" fill="#111111"/>
+      <rect x="48.3" y="74" width="3.4" height="8" fill="#111111"/>
+    </svg>`;
+  }
+
+  function noorusLogo() {
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <path d="M50 5 L90 20 L82 72 L50 95 L18 72 L10 20 Z" fill="#f0dc29"/>
+      <path d="M50 9 L86 22 L79 70 L50 90 L21 70 L14 22 Z" fill="#0f8f3c"/>
+      <path d="M50 9 L50 90 L21 70 L14 22 Z" fill="#16a64b"/>
+      <text x="50" y="20" font-family="Arial,sans-serif" font-size="8.5" font-weight="900" fill="#f0dc29" stroke="#1a4d2f" stroke-width="1" text-anchor="middle">SK NOORUS</text>
+      <text x="50" y="84" font-family="Arial,sans-serif" font-size="16" font-weight="900" fill="#f0dc29" stroke="#1a4d2f" stroke-width="1" text-anchor="middle">96</text>
+      <text x="50" y="61" font-family="Georgia,serif" font-size="48" font-style="italic" fill="#f0dc29" stroke="#e6f2a0" stroke-width="0.6" text-anchor="middle">N</text>
+      <circle cx="62" cy="37" r="8" fill="#ffffff"/>
+      <path d="M62 29 l4 3 l-1 5 l-6 1 l-4 -3 l1 -5 z" fill="#252525"/>
+    </svg>`;
+  }
+
+  function floraLogo() {
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="47" fill="#0f7f3a"/>
+      <circle cx="50" cy="50" r="41" fill="none" stroke="#ffffff" stroke-width="3"/>
+      <circle cx="50" cy="50" r="29" fill="#ffffff"/>
+      <path d="M50 24 L66 36 L60 56 L40 56 L34 36 Z" fill="#0f7f3a"/>
+      <path d="M50 28 L59 35 L55 49 L45 49 L41 35 Z" fill="#ffffff"/>
+      <path d="M37 62 C44 57, 56 57, 63 62 C56 67, 44 67, 37 62 Z" fill="#0f7f3a"/>
+      <text x="50" y="80" font-family="Arial,sans-serif" font-size="8" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="1">FC FLORA U18</text>
+    </svg>`;
+  }
+
+  function kuusaluLogo() {
+    return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="50" cy="50" r="47" fill="#121921"/>
+      <circle cx="50" cy="50" r="42" fill="#10161d" stroke="#1f66d1" stroke-width="3"/>
+      <path d="M29 34 L40 28 L50 34 L60 28 L71 34 L71 42 L60 49 L50 44 L40 49 L29 42 Z" fill="none" stroke="#232b35" stroke-width="2.2"/>
+      <path d="M37 50 L50 56 L63 50" fill="none" stroke="#232b35" stroke-width="2.2"/>
+      <path d="M39 58 L50 64 L61 58" fill="none" stroke="#232b35" stroke-width="2.2"/>
+      <path d="M42 66 L50 71 L58 66" fill="none" stroke="#232b35" stroke-width="2.2"/>
+      <circle cx="12" cy="50" r="1.5" fill="#202832"/>
+      <circle cx="88" cy="50" r="1.5" fill="#202832"/>
+      <path id="kuusaluTop" d="M18 28 A40 40 0 0 1 82 28" fill="none"/>
+      <text font-family="Arial,sans-serif" font-size="7" font-weight="800" fill="#1f66d1" letter-spacing="1.1">
+        <textPath href="#kuusaluTop" startOffset="50%" text-anchor="middle">KUUSALU KALEV</textPath>
+      </text>
+      <path id="kuusaluBottom" d="M82 72 A40 40 0 0 1 18 72" fill="none"/>
+      <text font-family="Arial,sans-serif" font-size="7" font-weight="800" fill="#1f66d1" letter-spacing="1.1">
+        <textPath href="#kuusaluBottom" startOffset="50%" text-anchor="middle">KUUSALU KALEV</textPath>
+      </text>
+    </svg>`;
+  }
+
+  const TEAMS = [
+    { id: 'starmedia', name: 'Tallinna FC Starmedia',     html: imgLogo('starmedia.png') },
+    { id: 'helios',    name: 'Võru FC Helios',             html: imgLogo('helios.png') },
+    { id: 'rae',       name: 'Rae Spordikool',             html: imgLogo('rae.png') },
+    { id: 'elva',      name: 'FC Elva U21',                html: imgLogo('elva.png') },
+    { id: 'kalev3',    name: 'JK Tallinna Kalev III',      html: imgLogo('kalev.png') },
+    { id: 'paide3',    name: 'Paide Linnameeskond III',    html: imgLogo('paide.png') },
+    { id: 'tulevik',   name: 'Viljandi JK Tulevik U21',   html: imgLogo('tulevik.png') },
+    { id: 'noova',     name: 'Ida-Viru JK Noova',          html: noovaLogo() },
+    { id: 'noorus',    name: 'Jõgeva SK Noorus-96',        html: noorusLogo() },
+    { id: 'flora',     name: 'Tallinna FC Flora U18',      html: imgLogo('flora.png') },
+    { id: 'kose',      name: 'FC Kose',                    html: koseLogo() },
+    { id: 'lootos',    name: 'Põlva FC Lootos',            html: imgLogo('lootos.png') },
+    { id: 'kuusalu',   name: 'JK Kuusalu Kalev',           html: kuusaluLogo() },
+    { id: 'joker',     name: 'Raasiku FC Joker',           html: imgLogo('joker.png') },
+  ];
+
+  // ── SVG LOGO GENERATORS ──
+  function svgBadge(label, c1, c2, textCol, accent) {
+    const lines = label.length > 7 ? [label.substring(0,Math.ceil(label.length/2)), label.substring(Math.ceil(label.length/2))] : [label];
+    const fontSize = lines[0].length > 6 ? 10 : 12;
+    return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <radialGradient id="bg_${label.replace(/\s/g,'')}" cx="40%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="${c1}"/>
+          <stop offset="100%" stop-color="${c2}"/>
+        </radialGradient>
+      </defs>
+      <circle cx="40" cy="40" r="39" fill="url(#bg_${label.replace(/\s/g,'')})"/>
+      <circle cx="40" cy="40" r="35" fill="none" stroke="${accent}" stroke-width="1.5" opacity=".6"/>
+      ${lines.length === 1
+        ? `<text x="40" y="${44}" font-family="Arial,sans-serif" font-size="${fontSize}" font-weight="900" fill="${textCol}" text-anchor="middle" letter-spacing="1">${lines[0]}</text>`
+        : `<text x="40" y="38" font-family="Arial,sans-serif" font-size="${fontSize}" font-weight="900" fill="${textCol}" text-anchor="middle" letter-spacing="1">${lines[0]}</text>
+           <text x="40" y="52" font-family="Arial,sans-serif" font-size="${fontSize}" font-weight="900" fill="${textCol}" text-anchor="middle" letter-spacing="1">${lines[1]}</text>`
+      }
+    </svg>`;
+  }
+
+  function svgBadgeStripes(label, c1, c2) {
+    // vertical stripes background
+    return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <clipPath id="circ_s_${label.replace(/\s/g,'')}"><circle cx="40" cy="40" r="39"/></clipPath>
+        <pattern id="stripe_${label.replace(/\s/g,'')}" x="0" y="0" width="16" height="80" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="8" height="80" fill="${c1}"/>
+          <rect x="8" y="0" width="8" height="80" fill="${c2}"/>
+        </pattern>
+      </defs>
+      <circle cx="40" cy="40" r="39" fill="url(#stripe_${label.replace(/\s/g,'')})"/>
+      <circle cx="40" cy="40" r="39" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="2"/>
+      <text x="40" y="44" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="${c1 === '#ffffff' ? '#000' : '#fff'}" stroke="${c1 === '#ffffff' ? '#fff' : '#000'}" stroke-width="3" paint-order="stroke" text-anchor="middle" letter-spacing="1">${label}</text>
+    </svg>`;
+  }
+
+  function svgBadgeSplit(label, c1, c2, textCol) {
+    return `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+      <clipPath id="circ_${label}"><circle cx="40" cy="40" r="39"/></clipPath>
+      <rect x="0" y="0" width="40" height="80" fill="${c1}" clip-path="url(#circ_${label})"/>
+      <rect x="40" y="0" width="40" height="80" fill="${c2}" clip-path="url(#circ_${label})"/>
+      <circle cx="40" cy="40" r="39" fill="none" stroke="rgba(255,255,255,.3)" stroke-width="2"/>
+      <text x="40" y="44" font-family="Arial,sans-serif" font-size="11" font-weight="900" fill="${textCol}" text-anchor="middle" letter-spacing="1">${label}</text>
+    </svg>`;
+  }
+
+  // ── MODAL ──
+  let modalTarget = 'home';
+
+  function openModal(side) {
+    if (isTvScreen) return;
+    modalTarget = side;
+    document.getElementById('modal-title').textContent =
+      side === 'home' ? 'Vali kodumeeskond' : 'Vali külalismeeskond';
+    const grid = document.getElementById('team-grid');
+    grid.innerHTML = TEAMS.map(t => `
+      <div class="team-option" onclick="selectTeam('${t.id}')">
+        <div class="opt-logo">${t.html}</div>
+        <span class="opt-name">${t.name}</span>
+      </div>
+    `).join('');
+    document.getElementById('team-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('team-modal').classList.remove('open');
+  }
+
+  document.getElementById('team-modal').addEventListener('click', e => {
+    if (e.target === document.getElementById('team-modal')) closeModal();
+  });
+
+  function selectTeam(id) {
+    const t = TEAMS.find(x => x.id === id);
+    if (!t) return;
+    const side = modalTarget;
+    document.getElementById(side + '-name').value = t.name;
+    document.getElementById('logo-' + side).innerHTML = t.html;
+    syncControlNames();
+    persistState();
+    closeModal();
+  }
+
+  // ── INIT LOGOS with placeholder ──
+  function initLogos() {
+    ['home', 'away'].forEach(side => {
+      document.getElementById('logo-' + side).innerHTML =
+        `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="40" cy="40" r="39" fill="#1e1e1e"/>
+          <circle cx="40" cy="40" r="35" fill="none" stroke="#3a3a3a" stroke-width="2" stroke-dasharray="6 4"/>
+          <text x="40" y="38" font-size="9" fill="#666" text-anchor="middle" font-family="Arial">KLÕPSA</text>
+          <text x="40" y="51" font-size="9" fill="#666" text-anchor="middle" font-family="Arial">VALIMISEKS</text>
+        </svg>`;
+    });
+  }
+  initLogos();
+
+  // ── STATE ──
+  let homeScore = 0, awayScore = 0;
+  let timerMin = 0, timerSec = 0, timerRunning = false, timerInterval = null;
+  let events = [];
+  let eventId = 0;
+  let broadcastMode = false;
+  let tvWindow = null;
+  const SCOREBOARD_STATE_KEY = 'scoreboard_state_v1';
+  const isTvScreen = new URLSearchParams(window.location.search).get('screen') === 'tv';
+
+  // ── TIMER ──
+  function toggleTimer() {
+    if (isTvScreen) return;
+    timerRunning = !timerRunning;
+    const btn = document.getElementById('btn-play');
+    const btnCtrl = document.getElementById('btn-play-ctrl');
+    if (timerRunning) {
+      if (btn) { btn.textContent = '⏸'; btn.classList.add('active'); }
+      if (btnCtrl) { btnCtrl.textContent = '⏸ Stopp'; btnCtrl.classList.add('active'); }
+      timerInterval = setInterval(() => {
+        timerSec++;
+        if (timerSec >= 60) { timerSec = 0; timerMin++; }
+        updateTimeDisplay();
+      }, 1000);
+    } else {
+      if (btn) { btn.textContent = '▶'; btn.classList.remove('active'); }
+      if (btnCtrl) { btnCtrl.textContent = '▶ Start'; btnCtrl.classList.remove('active'); }
+      clearInterval(timerInterval);
+    }
+    persistState();
+  }
+
+  function addMinute() {
+    adjustMinute(1);
+  }
+
+  function removeMinute() {
+    adjustMinute(-1);
+  }
+
+  function adjustMinute(delta) {
+    if (isTvScreen) return;
+    timerMin = Math.max(0, timerMin + delta);
+    updateTimeDisplay();
+  }
+
+  function setManualTimeFromControls() {
+    if (isTvScreen) return;
+    const minInput = document.getElementById('clock-min-control');
+    const secInput = document.getElementById('clock-sec-control');
+    const safeMin = Math.max(0, Math.min(300, parseInt(minInput.value, 10) || 0));
+    const safeSec = Math.max(0, Math.min(59, parseInt(secInput.value, 10) || 0));
+    minInput.value = safeMin;
+    secInput.value = safeSec;
+    timerMin = safeMin;
+    timerSec = safeSec;
+    updateTimeDisplay();
+  }
+
+  function updateTimeDisplay() {
+    const period = document.getElementById('period-select').value;
+    const extra = parseInt(document.getElementById('extra-time').value) || 0;
+    const minText = String(timerMin).padStart(2, '0');
+    const secText = String(timerSec).padStart(2, '0');
+    const extraLiveEl = document.getElementById('extra-time-live');
+    let display = `${minText}:${secText}`;
+    const maxMin = currentMaxMin();
+    const inRegularPeriod = period === '1. poolaeg' || period === '2. poolaeg';
+    const totalSec = (timerMin * 60) + timerSec;
+    const regularEndSec = maxMin * 60;
+
+    if (extraLiveEl) {
+      extraLiveEl.textContent = '';
+      extraLiveEl.classList.remove('show');
+    }
+
+    if (inRegularPeriod && extra > 0 && totalSec >= regularEndSec) {
+      const overSec = totalSec - regularEndSec;
+      const overMinText = String(Math.floor(overSec / 60)).padStart(2, '0');
+      const overSecText = String(overSec % 60).padStart(2, '0');
+      display = `${String(maxMin).padStart(2, '0')}:00`;
+      if (extraLiveEl) {
+        extraLiveEl.textContent = `+${extra} ${overMinText}:${overSecText}`;
+        extraLiveEl.classList.add('show');
+      }
+    }
+
+    document.getElementById('time-display').textContent = display;
+
+    const minCtrl = document.getElementById('clock-min-control');
+    const secCtrl = document.getElementById('clock-sec-control');
+    if (minCtrl) minCtrl.value = String(timerMin);
+    if (secCtrl) secCtrl.value = String(timerSec).padStart(2, '0');
+
+    if (!isTvScreen) persistState();
+  }
+
+  function currentMaxMin() {
+    const p = document.getElementById('period-select').value;
+    if (p === '1. poolaeg') return 45;
+    if (p === '2. poolaeg') return 90;
+    return 120;
+  }
+
+  function syncExtraTimeInputs(source) {
+    const topInput = document.getElementById('extra-time');
+    const ctrlInput = document.getElementById('extra-time-control');
+    const raw = source === 'ctrl' ? ctrlInput.value : topInput.value;
+    const safe = Math.max(0, Math.min(20, parseInt(raw, 10) || 0));
+    topInput.value = safe;
+    ctrlInput.value = safe;
+    updateTimeDisplay();
+    if (!isTvScreen) persistState();
+  }
+
+  document.getElementById('extra-time').addEventListener('input', () => syncExtraTimeInputs('top'));
+
+  // ── TEAM ACTIONS ──
+  function addTeamEvent(team, type) {
+    if (isTvScreen) return;
+    const playerField = document.getElementById(team + '-player');
+    const minField = document.getElementById(team + '-min');
+    const player = playerField.value.trim() || 'Tundmatu';
+    const min = parseInt(minField.value, 10) || timerMin || 1;
+
+    if (type === 'goal') {
+      adjustScoreByTeam(team, 1);
+      addEvent({ team, type: 'goal', player, min });
+      showGoalOverlay(player, team);
+    } else {
+      addEvent({ team, type, player, min });
+      renderCards();
+    }
+
+    playerField.value = '';
+    minField.value = '';
+    persistState();
+  }
+
+  function adjustScoreByTeam(team, delta) {
+    if (isTvScreen) return;
+    if (team === 'home') homeScore = Math.max(0, homeScore + delta);
+    else awayScore = Math.max(0, awayScore + delta);
+    updateScore(team);
+    persistState();
+  }
+
+  function updateScore(team) {
+    const el = document.getElementById('score-' + team);
+    el.textContent = team === 'home' ? homeScore : awayScore;
+    el.classList.remove('bump');
+    void el.offsetWidth;
+    el.classList.add('bump');
+  }
+
+  function renderCards() {
+    ['home', 'away'].forEach(side => {
+      const el = document.getElementById('cards-' + side);
+      el.innerHTML = events
+        .filter(e => e.team === side && e.type.startsWith('card'))
+        .map(e => `<span class="card-icon ${e.type === 'card-yellow' ? 'yellow' : 'red'}" title="${e.player} ${e.min}′"></span>`)
+        .join('');
+    });
+  }
+
+  // ── EVENTS ──
+  function addEvent(ev) {
+    ev.id = ++eventId;
+    events.push(ev);
+    renderEvents();
+    if (!ev.type.startsWith('card')) renderCards();
+  }
+
+  function removeEvent(id) {
+    if (isTvScreen) return;
+    events = events.filter(e => e.id !== id);
+    renderEvents();
+    renderCards();
+    persistState();
+  }
+
+  function renderEvents() {
+    ['home', 'away'].forEach(side => {
+      const col = document.getElementById('events-' + side);
+      const sideEvents = events.filter(e => e.team === side).sort((a,b) => a.min - b.min);
+      col.innerHTML = sideEvents.map(e => {
+        const icon = e.type === 'goal' ? '⚽' : e.type === 'card-yellow' ? '🟨' : '🟥';
+        return `<div class="event-item">
+          <span class="event-min">${e.min}′</span>
+          <span class="event-icon">${icon}</span>
+          <span class="event-name">${escHtml(e.player)}</span>
+          <button class="event-del" onclick="removeEvent(${e.id})" title="Eemalda">✕</button>
+        </div>`;
+      }).join('');
+    });
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── GOAL OVERLAY ──
+  function showGoalOverlay(player, team) {
+    const teamName = team === 'home'
+      ? document.getElementById('home-name').value
+      : document.getElementById('away-name').value;
+    document.getElementById('goal-overlay-sub').textContent = player + ' · ' + teamName;
+    const ov = document.getElementById('goal-overlay');
+    ov.classList.add('show');
+    setTimeout(() => ov.classList.remove('show'), 2800);
+  }
+
+  // ── PERIOD ──
+  function setPeriod(val) {
+    if (isTvScreen) return;
+    document.getElementById('period-badge').textContent = val;
+    if (val === '2. poolaeg' && timerMin < 45) { timerMin = 45; timerSec = 0; updateTimeDisplay(); }
+    if (val === 'Lisaaeg'    && timerMin < 90) { timerMin = 90; timerSec = 0; updateTimeDisplay(); }
+    persistState();
+  }
+
+  // ── FULLSCREEN ──
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+
+  function setTvScreenMode(enabled) {
+    document.body.classList.toggle('tv-screen', enabled);
+    if (enabled) {
+      document.getElementById('home-name').setAttribute('readonly', 'readonly');
+      document.getElementById('away-name').setAttribute('readonly', 'readonly');
+      closeModal();
+      setBroadcastMode(false);
+      fitTvTeamNames();
+    } else {
+      document.getElementById('home-name').removeAttribute('readonly');
+      document.getElementById('away-name').removeAttribute('readonly');
+      document.getElementById('home-name').style.fontSize = '';
+      document.getElementById('away-name').style.fontSize = '';
+    }
+  }
+
+  function fitTvTeamName(side) {
+    const input = document.getElementById(`${side}-name`);
+    if (!input) return;
+    if (!document.body.classList.contains('tv-screen')) {
+      input.style.fontSize = '';
+      return;
+    }
+
+    const base = Math.max(20, Math.min(54, window.innerWidth * 0.028));
+    const maxWidth = Math.max(260, Math.min(760, window.innerWidth * 0.42));
+    const text = input.value || '';
+    const ctx = fitTvTeamName.ctx || (fitTvTeamName.ctx = document.createElement('canvas').getContext('2d'));
+    const style = getComputedStyle(input);
+
+    let size = base;
+    while (size > 18) {
+      ctx.font = `${style.fontWeight} ${size}px ${style.fontFamily}`;
+      const measured = ctx.measureText(text).width + 18;
+      if (measured <= maxWidth) break;
+      size -= 1;
+    }
+
+    input.style.fontSize = `${size}px`;
+  }
+
+  function fitTvTeamNames() {
+    fitTvTeamName('home');
+    fitTvTeamName('away');
+  }
+
+  function openTvScreen() {
+    const tvUrl = `${window.location.pathname}?screen=tv`;
+    tvWindow = window.open(tvUrl, 'scoreboard_tv', 'popup=yes,width=1920,height=1080');
+    if (tvWindow) tvWindow.focus();
+    persistState();
+  }
+
+  function requestTvFullscreen() {
+    document.documentElement.requestFullscreen()
+      .then(() => updateTvFullscreenHint())
+      .catch(() => updateTvFullscreenHint());
+  }
+
+  function updateTvFullscreenHint() {
+    if (!isTvScreen) return;
+    const hint = document.getElementById('tv-fullscreen-hint');
+    if (!hint) return;
+    hint.style.display = document.fullscreenElement ? 'none' : 'flex';
+  }
+
+  function serializeState() {
+    return {
+      homeScore,
+      awayScore,
+      timerMin,
+      timerSec,
+      events,
+      eventId,
+      period: document.getElementById('period-select').value,
+      extraTime: parseInt(document.getElementById('extra-time').value, 10) || 0,
+      homeName: document.getElementById('home-name').value,
+      awayName: document.getElementById('away-name').value,
+      homeLogoHtml: document.getElementById('logo-home').innerHTML,
+      awayLogoHtml: document.getElementById('logo-away').innerHTML,
+    };
+  }
+
+  function applyState(state) {
+    if (!state) return;
+
+    homeScore = Number(state.homeScore) || 0;
+    awayScore = Number(state.awayScore) || 0;
+    timerMin = Number(state.timerMin) || 0;
+    timerSec = Number(state.timerSec) || 0;
+    events = Array.isArray(state.events) ? state.events : [];
+    eventId = Number(state.eventId) || events.length;
+
+    document.getElementById('score-home').textContent = String(homeScore);
+    document.getElementById('score-away').textContent = String(awayScore);
+    document.getElementById('home-name').value = state.homeName || 'KODU';
+    document.getElementById('away-name').value = state.awayName || 'KÜLALIS';
+
+    const homeTeamByName = TEAMS.find(t => t.name === document.getElementById('home-name').value);
+    const awayTeamByName = TEAMS.find(t => t.name === document.getElementById('away-name').value);
+
+    if (homeTeamByName) document.getElementById('logo-home').innerHTML = homeTeamByName.html;
+    else if (state.homeLogoHtml) document.getElementById('logo-home').innerHTML = state.homeLogoHtml;
+
+    if (awayTeamByName) document.getElementById('logo-away').innerHTML = awayTeamByName.html;
+    else if (state.awayLogoHtml) document.getElementById('logo-away').innerHTML = state.awayLogoHtml;
+
+    document.getElementById('extra-time').value = String(state.extraTime || 0);
+    const ctrlExtra = document.getElementById('extra-time-control');
+    if (ctrlExtra) ctrlExtra.value = String(state.extraTime || 0);
+
+    if (state.period) {
+      document.getElementById('period-select').value = state.period;
+      document.getElementById('period-badge').textContent = state.period;
+    }
+
+    updateTimeDisplay();
+    renderEvents();
+    renderCards();
+    syncControlNames();
+    fitTvTeamNames();
+  }
+
+  function persistState() {
+    if (isTvScreen) return;
+    localStorage.setItem(SCOREBOARD_STATE_KEY, JSON.stringify(serializeState()));
+  }
+
+  function restoreStateFromStorage() {
+    const raw = localStorage.getItem(SCOREBOARD_STATE_KEY);
+    if (!raw) return;
+    try {
+      applyState(JSON.parse(raw));
+    } catch (_) {
+      // ignore malformed state
+    }
+  }
+
+  // ── TABLOO MODE ──
+  function setBroadcastMode(enabled) {
+    if (isTvScreen) return;
+    broadcastMode = enabled;
+    document.body.classList.toggle('broadcast-mode', enabled);
+
+    const btn = document.getElementById('broadcast-btn');
+    const indicator = document.getElementById('mode-indicator');
+    if (btn) btn.textContent = enabled ? 'Juhtimine' : 'Tabloo';
+    if (indicator) indicator.textContent = enabled ? 'Tabloo' : 'Operator';
+
+    if (enabled) {
+      closeModal();
+    }
+  }
+
+  function toggleBroadcastMode() {
+    if (isTvScreen) return;
+    setBroadcastMode(!broadcastMode);
+  }
+
+  // ── RESET ──
+  function resetGame() {
+    if (isTvScreen) return;
+    if (!confirm('Kas oled kindel? Kõik andmed kustutatakse.')) return;
+    homeScore = 0; awayScore = 0;
+    timerMin = 0; timerSec = 0;
+    if (timerRunning) toggleTimer();
+    events = [];
+    document.getElementById('score-home').textContent = '0';
+    document.getElementById('score-away').textContent = '0';
+    document.getElementById('time-display').textContent = '00:00';
+    document.getElementById('extra-time').value = '0';
+    document.getElementById('extra-time-control').value = '0';
+    document.getElementById('period-badge').textContent = '1. poolaeg';
+    document.getElementById('period-select').value = '1. poolaeg';
+    document.getElementById('cards-home').innerHTML = '';
+    document.getElementById('cards-away').innerHTML = '';
+    document.getElementById('events-home').innerHTML = '';
+    document.getElementById('events-away').innerHTML = '';
+    document.getElementById('home-name').value = 'KODU';
+    document.getElementById('away-name').value = 'KÜLALIS';
+    initLogos();
+    syncControlNames();
+    persistState();
+  }
+
+  // ── SYNC CONTROL NAMES ──
+  function syncControlNames() {
+    const h = document.getElementById('home-name').value || 'Kodumeeskond';
+    const a = document.getElementById('away-name').value || 'Külalismeeskond';
+    const homeCtrl = document.getElementById('home-control-name');
+    const awayCtrl = document.getElementById('away-control-name');
+    if (homeCtrl) homeCtrl.textContent = h;
+    if (awayCtrl) awayCtrl.textContent = a;
+    fitTvTeamNames();
+    if (!isTvScreen) persistState();
+  }
+  document.getElementById('home-name').addEventListener('input', syncControlNames);
+  document.getElementById('away-name').addEventListener('input', syncControlNames);
+  syncControlNames();
+
+  // ── KEYBOARD SHORTCUTS ──
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'b' || e.key === 'B') {
+      toggleBroadcastMode();
+    }
+    if (e.key === 'Escape' && broadcastMode) {
+      setBroadcastMode(false);
+    }
+  });
+
+  // URL mode: /index.html?tabloo=1
+  (function initModeFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('screen') === 'tv') {
+      setTvScreenMode(true);
+      restoreStateFromStorage();
+      if (params.get('autofs') === '1' && !document.fullscreenElement) {
+        requestTvFullscreen();
+      }
+      updateTvFullscreenHint();
+      return;
+    }
+
+    restoreStateFromStorage();
+
+    if (params.get('tabloo') === '1') {
+      setBroadcastMode(true);
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      }
+    }
+
+    persistState();
+  })();
+
+  window.addEventListener('storage', (e) => {
+    if (e.key !== SCOREBOARD_STATE_KEY || !e.newValue) return;
+    try {
+      applyState(JSON.parse(e.newValue));
+    } catch (_) {
+      // ignore malformed state
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    updateTvFullscreenHint();
+  });
+
+  window.addEventListener('resize', () => {
+    fitTvTeamNames();
+  });
+</script>
+</body>
+</html>
