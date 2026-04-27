@@ -1136,8 +1136,19 @@
     document.getElementById(side + '-name').value = t.name;
     document.getElementById('logo-' + side).innerHTML = t.html;
     syncControlNames();
-    persistState();
     closeModal();
+    // Load roster from rosters/<id>.json
+    fetch(`rosters/${id}.json?v=${Date.now()}`)
+      .then(r => r.ok ? r.json() : [])
+      .then(players => {
+        if (Array.isArray(players) && players.length > 0) {
+          if (side === 'home') homePlayers = [...players];
+          else awayPlayers = [...players];
+          renderRoster(side);
+        }
+        persistState();
+      })
+      .catch(() => persistState());
   }
 
   // ── INIT LOGOS with placeholder ──
