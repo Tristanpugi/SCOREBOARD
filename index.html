@@ -558,14 +558,32 @@
       gap: 2vw;
     }
     body.tv-screen .team {
-      gap: 18px;
+      gap: 10px;
       min-width: 0;
     }
     body.tv-screen .team-logo {
-      width: clamp(96px, 8vw, 168px);
-      height: clamp(96px, 8vw, 168px);
+      width: clamp(180px, 18vw, 320px);
+      height: clamp(180px, 18vw, 320px);
       border-color: #4a4a4a;
       pointer-events: none;
+    }
+    .team-logo-label {
+      display: none;
+      color: var(--text);
+      font-size: clamp(2.4rem, 4vw, 5rem);
+      font-weight: 700;
+      text-align: center;
+      letter-spacing: 0.5px;
+      text-transform: none;
+      max-width: 100%;
+      overflow: visible;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.05;
+      padding: 0 0.25rem;
+    }
+    body.tv-screen .team-logo-label {
+      display: block;
     }
     body.tv-screen .team-name-input {
       display: none !important;
@@ -752,6 +770,7 @@
     <div class="team">
       <span class="team-subtitle">Kodumeeskond</span>
       <div class="team-logo" id="logo-home" onclick="openModal('home')" title="Klõpsa meeskonna valimiseks"></div>
+      <span class="team-logo-label" id="home-logo-name">KODU</span>
       <input class="team-name-input" id="home-name" value="KODU" maxlength="22" />
     </div>
 
@@ -790,6 +809,7 @@
     <div class="team">
       <span class="team-subtitle">Külalismeeskond</span>
       <div class="team-logo" id="logo-away" onclick="openModal('away')" title="Klõpsa meeskonna valimiseks"></div>
+      <span class="team-logo-label" id="away-logo-name">KÜLALIS</span>
       <input class="team-name-input" id="away-name" value="KÜLALIS" maxlength="22" style="text-align:center" />
     </div>
   </div>
@@ -1692,8 +1712,12 @@
     const a = document.getElementById('away-name').value || 'Külalismeeskond';
     const homeCtrl = document.getElementById('home-control-name');
     const awayCtrl = document.getElementById('away-control-name');
+    const homeLogoLabel = document.getElementById('home-logo-name');
+    const awayLogoLabel = document.getElementById('away-logo-name');
     if (homeCtrl) homeCtrl.textContent = h;
     if (awayCtrl) awayCtrl.textContent = a;
+    if (homeLogoLabel) homeLogoLabel.textContent = h;
+    if (awayLogoLabel) awayLogoLabel.textContent = a;
     fitTvTeamNames();
     if (!isTvScreen) persistState();
   }
