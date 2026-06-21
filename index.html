@@ -408,18 +408,20 @@
     /* ── TEAM LOGO ── */
     .team-logo {
       width: 72px; height: 72px;
-      border-radius: 50%;
+      border-radius: 16px;
       display: flex; align-items: center; justify-content: center;
       font-weight: 900;
       font-size: 1rem;
       letter-spacing: 0;
       cursor: pointer;
       border: 3px solid var(--border);
-      transition: border-color .2s, transform .2s;
+      background: transparent;
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+      transition: border-color .2s, transform .2s, box-shadow .2s;
       overflow: hidden;
       flex-shrink: 0;
     }
-    .team-logo:hover { border-color: var(--yellow); transform: scale(1.07); }
+    .team-logo:hover { border-color: var(--yellow); transform: scale(1.05); box-shadow: 0 14px 30px rgba(0,0,0,.28); }
     .team-logo svg { width: 100%; height: 100%; }
 
     /* ── TEAM PICKER MODAL ── */
@@ -461,9 +463,10 @@
     .team-option:hover { border-color: var(--yellow); background: #1f1f1f; }
     .team-option .opt-logo {
       width: 40px; height: 40px;
-      border-radius: 50%;
+      border-radius: 10px;
       flex-shrink: 0;
       overflow: hidden;
+      background: transparent;
     }
     .team-option .opt-logo svg { width: 100%; height: 100%; }
     .team-option .opt-name { font-size: 0.82rem; font-weight: 600; }
@@ -560,10 +563,12 @@
     body.tv-screen .team {
       gap: 10px;
       min-width: 0;
+      width: 100%;
     }
     body.tv-screen .team-logo {
-      width: clamp(180px, 18vw, 320px);
-      height: clamp(180px, 18vw, 320px);
+      width: clamp(280px, 27vw, 500px);
+      height: clamp(280px, 27vw, 500px);
+      border-radius: 50%;
       border-color: #4a4a4a;
       pointer-events: none;
     }
@@ -575,10 +580,11 @@
       text-align: center;
       letter-spacing: 0.5px;
       text-transform: none;
-      max-width: 100%;
-      overflow: visible;
-      white-space: normal;
-      word-break: break-word;
+      width: min(48vw, 920px);
+      max-width: none;
+      overflow: hidden;
+      white-space: nowrap;
+      word-break: normal;
       line-height: 1.05;
       padding: 0 0.25rem;
     }
@@ -967,7 +973,7 @@
 
   // Real logo helper
   function imgLogo(file) {
-    return `<img src="logos/${file}?v=${LOGO_VERSION}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:50%;background:#fff;padding:4px;">`;
+    return `<img src="logos/${file}?v=${LOGO_VERSION}" alt="" style="width:100%;height:100%;object-fit:contain;border-radius:10px;background:transparent;padding:0;">`;
   }
 
   function raeLogo() {
@@ -1059,12 +1065,24 @@
     </svg>`;
   }
 
+  function poseidonLogo() {
+    return imgLogo('poseidon.png');
+  }
+
+  function kalev3Logo() {
+    return `<div style="position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+      <img src="logos/kalev.png" style="width: 100%; height: 100%; object-fit: contain;" />
+      <div style="position: absolute; bottom: -2px; right: -2px; background: #e63946; color: white; font-weight: 900; font-size: 14px; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #0d0d0d;">III</div>
+    </div>`;
+  }
+
   const TEAMS = [
     { id: 'starmedia', name: 'Tallinna FC Starmedia',     html: imgLogo('starmedia.png') },
     { id: 'helios',    name: 'Võru FC Helios',             html: imgLogo('helios.png') },
     { id: 'rae',       name: 'Rae Spordikool',             html: imgLogo('rae.png') },
     { id: 'elva',      name: 'FC Elva U21',                html: imgLogo('elva.png') },
-    { id: 'kalev3',    name: 'JK Tallinna Kalev III',      html: imgLogo('kalev.png') },
+    { id: 'kalev3',    name: 'JK Tallinna Kalev III',      html: kalev3Logo() },
+    { id: 'kalev',     name: 'Tallinna Kalev',             html: imgLogo('kalev.png') },
     { id: 'paide3',    name: 'Paide Linnameeskond III',    html: imgLogo('paide.png') },
     { id: 'tulevik',   name: 'Viljandi JK Tulevik U21',   html: imgLogo('tulevik.png') },
     { id: 'noova',     name: 'Ida-Viru JK Noova',          html: noovaLogo() },
@@ -1074,6 +1092,8 @@
     { id: 'lootos',    name: 'Põlva FC Lootos',            html: imgLogo('lootos.png') },
     { id: 'kuusalu',   name: 'JK Kuusalu Kalev',           html: kuusaluLogo() },
     { id: 'joker',     name: 'Raasiku FC Joker',           html: imgLogo('joker.png') },
+    { id: 'poseidon',  name: 'Pärnu JK Poseidon',          html: poseidonLogo() },
+    { id: 'nommekalju', name: 'Nõmme Kalju',              html: imgLogo('nommekalju.png') },
   ];
 
   // ── SVG LOGO GENERATORS ──
@@ -1439,11 +1459,16 @@
       closeModal();
       setBroadcastMode(false);
       fitTvTeamNames();
+      fitTvTeamLabels();
     } else {
       document.getElementById('home-name').removeAttribute('readonly');
       document.getElementById('away-name').removeAttribute('readonly');
       document.getElementById('home-name').style.fontSize = '';
       document.getElementById('away-name').style.fontSize = '';
+      const homeLogoLabel = document.getElementById('home-logo-name');
+      const awayLogoLabel = document.getElementById('away-logo-name');
+      if (homeLogoLabel) homeLogoLabel.style.fontSize = '';
+      if (awayLogoLabel) awayLogoLabel.style.fontSize = '';
     }
   }
 
@@ -1475,6 +1500,34 @@
   function fitTvTeamNames() {
     fitTvTeamName('home');
     fitTvTeamName('away');
+  }
+
+  function fitTvTeamLabel(side) {
+    const label = document.getElementById(`${side}-logo-name`);
+    if (!label) return;
+    if (!document.body.classList.contains('tv-screen')) {
+      label.style.fontSize = '';
+      return;
+    }
+
+    const text = label.textContent || '';
+    const ctx = fitTvTeamLabel.ctx || (fitTvTeamLabel.ctx = document.createElement('canvas').getContext('2d'));
+    const style = getComputedStyle(label);
+    const maxWidth = Math.max(360, Math.min(1100, window.innerWidth * 0.54));
+
+    let size = Math.max(18, Math.min(64, window.innerWidth * 0.038));
+    while (size > 12) {
+      ctx.font = `${style.fontWeight} ${size}px ${style.fontFamily}`;
+      if (ctx.measureText(text).width <= maxWidth) break;
+      size -= 1;
+    }
+
+    label.style.fontSize = `${size}px`;
+  }
+
+  function fitTvTeamLabels() {
+    fitTvTeamLabel('home');
+    fitTvTeamLabel('away');
   }
 
   function openTvScreen() {
@@ -1719,6 +1772,7 @@
     if (homeLogoLabel) homeLogoLabel.textContent = h;
     if (awayLogoLabel) awayLogoLabel.textContent = a;
     fitTvTeamNames();
+    fitTvTeamLabels();
     if (!isTvScreen) persistState();
   }
   document.getElementById('home-name').addEventListener('input', syncControlNames);
@@ -1790,6 +1844,7 @@
 
   window.addEventListener('resize', () => {
     fitTvTeamNames();
+    fitTvTeamLabels();
   });
 
   // ── FIREBASE ÜHENDUSE INDIKAATOR ──
